@@ -1,4 +1,4 @@
-import random
+from random import uniform , randint , random
 
 #we are given N ,D and for each N we get the x, y
 #for example N=4 D=2 (1,5), (2,8), (3,13), (4,20)
@@ -18,51 +18,74 @@ def initialize_chromosome(n : int) -> list:
     c = [0] * n
     for i in range(n):
         #for generate random float num between -10 and 10 
-        c[i] = random.uniform(-10,10)
+        c[i] = uniform(-10,10)
     return c
 
-#Caluclate fitness for each chromosome
 
+def fitness(chromosome: list , xPoints: list , yPoints: list) -> float:
+    fitness = 0
+    yPredicted = []
+    for x in xPoints:
+        y = 0
+        for i in range(len(chromosome)):
+            y += (x**i) * (chromosome[i])
+        yPredicted.append(y)
 
+    for i in range(len(yPredicted)):
+        fitness += ((yPoints[i] - yPredicted[i])**2)
 
+    return fitness / len(yPoints)
 
+def tournamentSelectionHelper(firstChromosome: list , secondChromosome: list , xPoints: list , yPoints: list) -> list :
+    return firstChromosome if fitness(firstChromosome , xPoints , yPoints) < fitness(secondChromosome , xPoints , yPoints) else secondChromosome
 
-def get_rand() -> float:
-    random_num = random()
-    return random_num
-
-# selection 
-def rank_selection(n:int , cummulative_rank:list) -> list:
-    selected = []
-    for i in range(n):
-        num = get_rand()
-        for i in range(len(cummulative_rank)):
-            if num <= cummulative_rank[i] :
-                selected.append(i)
-                break
-    return selected
+def tournamentSelection(chromosomes: list[list] , k: int , xPoints: list , yPoints: list) -> list[list]:
+    matingPool = []
+    for i in range(0 , len(chromosomes) , 2):
+        chosenChromosome = tournamentSelectionHelper(chromosomes[i] , chromosomes[i+1])
+        matingPool.append(chosenChromosome)
+        chromosomes.remove(chosenChromosome)
+    return matingPool
 
 # crossover
-def crossover_swaper(n_point:int , chromosome1:list , chromosome2:list) -> list[list]:
-    new_chromosome1 = chromosome1[0:n_point] + chromosome2[n_point:]
-    new_chromosome2 = chromosome2[0:n_point] + chromosome1[n_point:]
-    return [new_chromosome1 , new_chromosome2]
+def crossover_swaper(n_point:int , m_point:int , chromosome1:list , chromosome2:list) -> list[list]:
+    firstPoint = min(n_point , m_point)
+    secondPoint = max(n_point , m_point)
+    c1 = chromosome1[0:firstPoint+1] + chromosome2[firstPoint+1 : secondPoint+1] + chromosome1[secondPoint+1 :]
+    c2 = chromosome2[0:firstPoint+1] + chromosome1[firstPoint+1 : secondPoint+1] + chromosome2[secondPoint+1 :]
+    return [c1 , c2]
 
-def crossover(selected:list , chromosomes:list[list] , Pc:float) -> list[list]:
+def crossover(matingPool:list[list] , chromsomes:list[list] , PC:float) -> list[list]:
     offsprings = []
-    i = 0
-    while(i < len(selected)):
-        chrome1 = chromosomes[selected[i]]
-        chrome2 = chromosomes[selected[i+1]]
-        rand = get_rand()
-        if rand <= Pc:
-            offsprings.extend(crossover_swaper(randint(1 , len(chrome1)-1) , chrome1 , chrome2))
-        else:
-            offsprings.append(chrome1)
-            offsprings.append(chrome2)
-        i+=2
+    for i in range(len(matingPool) , 2):
+        randomNumber = random()
+        if randomNumber <= PC:
+            offsprings.extend(crossover_swaper(randint(1 , len(chromsomes[i])-2) , randint(1 , len(chromsomes[i])-2) , matingPool[i] , matingPool[i+1]))
     return offsprings
+
+def nonUniformMutation():
+    pass
+
+def elitistReplacement(): # don't forget to combine the mating pool with offsprings
+    pass
+
+def main():
+    polyDegree = 2
+    xPoints = [4 , 1 , 2 , 3 , 4]
+    yPoints = [2 , 5 , 8 , 13 , 20]
+
+    iterations = 1000
+    popSize = 8 
+    k = 4
+    PC = 0.7
+    PM = 0.02
+
+    chromsome1 = [1 ,2 ,3 ,4 ,5]
+    chromsome2 = [6 ,7 ,8 ,9 ,10]
+
+
         
+main()
 #make the non_unoiform mutation        
 # You should iterate over each bit in each offspring chromosome, but we’ll just show you 
 # the mutation on the first bit (i=0) of O1:
