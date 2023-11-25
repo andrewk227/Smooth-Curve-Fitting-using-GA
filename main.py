@@ -67,14 +67,36 @@ def crossover(matingPool:list[list] , chromsomes:list[list] , PC:float) -> list[
             offsprings.extend(crossover_swaper(randint(1 , len(chromsomes[i])-2) , randint(1 , len(chromsomes[i])-2) , matingPool[i] , matingPool[i+1]))
     return offsprings
 
+
+#make the non_unoiform mutation        
+# You should iterate over each bit in each offspring chromosome, but we’ll just show you 
+# the mutation on the first bit (i=0) of O1:
+# Generate a random number (rm) between 0 and 1.
+# if rm <= Pm:
+#  ∆Lxi = 1.95 – (-10) = 11.95
+#  ∆Uxi = 10 – 1.95 = 8.05
+#  Generate r1 ∈ [0,1]: if r1 <= 0.5, y = ∆Lxi, else r1 > 0.5, y = ∆Uxi
+# (Assume r1 = 0.19, therefore y = 11.95)
+#  ∆(t,y) = y * (1 – r ^ ((1 - t\T) ^ b))
+# =
+#  ∆(1,11.95) = 11.95 * (1 – 0.67 ^ ((1 - 1\100) ^ 1))
+# =
+# 3.9
+#  Since y = ∆Lxi, therefore Xinew = 1.95 – 3.9 = -1.95
+
 def applyNonUniformMutation(chromosome:list , PM:float , generation:int , maxGeneration:int) -> list:
     for i in range(len(chromosome)):
         randomNumber = random()
         if randomNumber <= PM:
-            factor = (generation / maxGeneration) ** 2
-            mutation_change = uniform(-0.5, 0.5) * factor
-            chromosome[i] += mutation_change
-            chromosome[i] = max(min(chromosome[i], 10), -10)  # problem constraint
+            Lxi = chromosome[i] - (-10)
+            Uxi = 10 - chromosome[i]
+            randomNumber2 = random()
+            if randomNumber2 <= 0.5:
+                y = Lxi
+            else:
+                y = Uxi
+            
+            chromosome[i] = y * (1-(random() ** (1- generation / maxGeneration) ** 1))
     return chromosome
 
 def nonUniformMutation(offsprings:list[list] , PM:float , generation:int , maxGeneration:int ) -> list[list]:
@@ -122,7 +144,7 @@ def parser(filePath:str):
 
 
 def main():
-    iterations = 1000
+    iterations = 2000
     popSize = 8 
     k = 4
     PC = 0.7
@@ -142,8 +164,9 @@ def main():
         for i in range(iterations):
             matingPool = tournamentSelection(generation , k , xPoints , yPoints)
             offsprings = crossover(matingPool , generation , PC)
-            offsprings = nonUniformMutation(offsprings , PM , i , 1000)
+            offsprings = nonUniformMutation(offsprings , PM , i , 2000)
             generation.extend(elitistReplacement(offsprings , matingPool , xPoints , yPoints , k))
+            
         finalGeneration = sorted(generation , key = lambda x: fitness(x , xPoints , yPoints))
         output.append("coefficients of the polynomial function: " + str(finalGeneration[0]) + "\n")
         output.append("mean square error: " + str(fitness(finalGeneration[0], xPoints, yPoints)) + "\n")
@@ -158,21 +181,5 @@ def main():
 
         
 main()
-#make the non_unoiform mutation        
-# You should iterate over each bit in each offspring chromosome, but we’ll just show you 
-# the mutation on the first bit (i=0) of O1:
-# Generate a random number (rm) between 0 and 1.
-# if rm <= Pm:
-#  ∆Lxi = 1.95 – (-10) = 11.95
-#  ∆Uxi = 10 – 1.95 = 8.05
-#  Generate r1 ∈ [0,1]: if r1 <= 0.5, y = ∆Lxi, else r1 > 0.5, y = ∆Uxi
-# (Assume r1 = 0.19, therefore y = 11.95)
-#  ∆(t,y) = y * (1 – r ^ ((1 - t\T) ^ b))
-# =
-#  ∆(1,11.95) = 11.95 * (1 – 0.67 ^ ((1 - 1\100) ^ 1))
-# =
-# 3.9
-#  Since y = ∆Lxi, therefore Xinew = 1.95 – 3.9 = -1.95
-
 
 
