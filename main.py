@@ -41,10 +41,14 @@ def tournamentSelectionHelper(firstChromosome: list , secondChromosome: list , x
 
 def tournamentSelection(chromosomes: list[list] , k: int , xPoints: list , yPoints: list) -> list[list]:
     matingPool = []
+    toBeRemoved = []
     for i in range(0 , len(chromosomes) , 2):
-        chosenChromosome = tournamentSelectionHelper(chromosomes[i] , chromosomes[i+1])
+        chosenChromosome = tournamentSelectionHelper(chromosomes[i] , chromosomes[i+1] , xPoints , yPoints)
         matingPool.append(chosenChromosome)
-        chromosomes.remove(chosenChromosome)
+        toBeRemoved.append(chosenChromosome)
+    
+    for i in range(len(toBeRemoved)):
+        chromosomes.remove(toBeRemoved[i])
     return matingPool
 
 # crossover
@@ -57,31 +61,88 @@ def crossover_swaper(n_point:int , m_point:int , chromosome1:list , chromosome2:
 
 def crossover(matingPool:list[list] , chromsomes:list[list] , PC:float) -> list[list]:
     offsprings = []
-    for i in range(len(matingPool) , 2):
+    for i in range( 0, len(matingPool) , 2):
         randomNumber = random()
         if randomNumber <= PC:
             offsprings.extend(crossover_swaper(randint(1 , len(chromsomes[i])-2) , randint(1 , len(chromsomes[i])-2) , matingPool[i] , matingPool[i+1]))
     return offsprings
 
-def nonUniformMutation():
-    pass
+def applyNonUniformMutation(chromosome:list , PM:float , generation:int , maxGeneration:int) -> list:
+    for i in range(len(chromosome)):
+        randomNumber = random()
+        if randomNumber <= PM:
+            factor = (generation / maxGeneration) ** 2
+            mutation_change = uniform(-0.5, 0.5) * factor
+            chromosome[i] += mutation_change
+            chromosome[i] = max(min(chromosome[i], 10), -10)  # problem constraint
+    return chromosome
 
-def elitistReplacement(): # don't forget to combine the mating pool with offsprings
-    pass
+def nonUniformMutation(offsprings:list[list] , PM:float , generation:int , maxGeneration:int ) -> list[list]:
+    for i in range(len(offsprings)):
+        offsprings[i] = applyNonUniformMutation(offsprings[i] , PM , generation , maxGeneration)
+    return offsprings
+
+def elitistReplacement(offsprings:list[list] , matingPool:list[list] ,xPoints:list , yPoints:list , k:int ) -> list[list]: # don't forget to combine the mating pool with offsprings
+    potentialGeneration = offsprings + matingPool
+    potentialGeneration = sorted(potentialGeneration , key = lambda x: fitness(x , xPoints , yPoints))
+    return potentialGeneration[:k] # extend it on the generation in the main
+
+def parser(filePath:str):
+    numberOfData = 0
+    numberOfPoints = []
+    polyDegree = []
+    xPointsList = []
+    yPointsList = []
+
+    with open(filePath, 'r') as file:
+        lines = file.readlines()
+    
+    numberOfData = int(lines[0])
+
+    i = 1
+    while(i<len(lines)):
+        line = lines[i].split(' ')
+        numberOfPoints.append(int(line[0]))
+        polyDegree.append(int(line[1]))
+        i+=1
+
+        xPoints = []
+        yPoints = []
+        for point in range(numberOfPoints[-1]):
+            line = lines[i].split(' ')
+            xPoints.append(float(line[0]))
+            yPoints.append(float(line[1]))
+            i+=1
+        
+        xPointsList.append(xPoints)
+        yPointsList.append(yPoints)
+
+    return numberOfData , polyDegree , xPointsList , yPointsList
+
+
 
 def main():
-    polyDegree = 2
-    xPoints = [4 , 1 , 2 , 3 , 4]
-    yPoints = [2 , 5 , 8 , 13 , 20]
-
     iterations = 1000
     popSize = 8 
     k = 4
     PC = 0.7
     PM = 0.02
 
-    chromsome1 = [1 ,2 ,3 ,4 ,5]
-    chromsome2 = [6 ,7 ,8 ,9 ,10]
+    numberOfData , polyDegrees , xPointsList , yPointsList = parser('curve_fitting_input.txt')
+
+    for testCase in range(numberOfData):
+        polyDegree = polyDegrees[testCase]
+        xPoints = xPointsList[testCase]
+        yPoints = yPointsList[testCase]
+
+        generation = [initialize_chromosome(polyDegree+1)] * popSize
+        for i in range(iterations):
+            matingPool = tournamentSelection(generation , k , xPoints , yPoints)
+            offsprings = crossover(matingPool , generation , PC)
+            offsprings = nonUniformMutation(offsprings , PM , i , 1000)
+            generation.extend(elitistReplacement(offsprings , matingPool , xPoints , yPoints , k))
+        
+
 
 
         
