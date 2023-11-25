@@ -129,11 +129,14 @@ def main():
     PM = 0.02
 
     numberOfData , polyDegrees , xPointsList , yPointsList = parser('curve_fitting_input.txt')
+    output = []
+    
 
     for testCase in range(numberOfData):
         polyDegree = polyDegrees[testCase]
         xPoints = xPointsList[testCase]
         yPoints = yPointsList[testCase]
+        output.append("dataset index: " + str(testCase) + "\n")
 
         generation = [initialize_chromosome(polyDegree+1)] * popSize
         for i in range(iterations):
@@ -141,6 +144,14 @@ def main():
             offsprings = crossover(matingPool , generation , PC)
             offsprings = nonUniformMutation(offsprings , PM , i , 1000)
             generation.extend(elitistReplacement(offsprings , matingPool , xPoints , yPoints , k))
+        finalGeneration = sorted(generation , key = lambda x: fitness(x , xPoints , yPoints))
+        output.append("coefficients of the polynomial function: " + str(finalGeneration[0]) + "\n")
+        output.append("mean square error: " + str(fitness(finalGeneration[0], xPoints, yPoints)) + "\n")
+        output.append("\n")
+
+    f = open("output.txt", "w")
+    f.writelines(output)
+    f.close()
         
 
 
