@@ -93,10 +93,13 @@ def applyNonUniformMutation(chromosome:list , PM:float , generation:int , maxGen
             randomNumber2 = random()
             if randomNumber2 <= 0.5:
                 y = Lxi
+                delta = y * (1-(random() ** (1- generation / maxGeneration) ** 1))
+                chromosome[i] -= delta
             else:
                 y = Uxi
-            
-            chromosome[i] = y * (1-(random() ** (1- generation / maxGeneration) ** 1))
+                delta = y * (1-(random() ** (1- generation / maxGeneration) ** 1))
+                chromosome[i] += delta
+
     return chromosome
 
 def nonUniformMutation(offsprings:list[list] , PM:float , generation:int , maxGeneration:int ) -> list[list]:
@@ -144,7 +147,7 @@ def parser(filePath:str):
 
 
 def main():
-    iterations = 2000
+    iterations = 10000
     popSize = 8 
     k = 4
     PC = 0.7
@@ -164,7 +167,7 @@ def main():
         for i in range(iterations):
             matingPool = tournamentSelection(generation , k , xPoints , yPoints)
             offsprings = crossover(matingPool , generation , PC)
-            offsprings = nonUniformMutation(offsprings , PM , i , 2000)
+            offsprings = nonUniformMutation(offsprings , PM , i , 10000)
             generation.extend(elitistReplacement(offsprings , matingPool , xPoints , yPoints , k))
             
         finalGeneration = sorted(generation , key = lambda x: fitness(x , xPoints , yPoints))
